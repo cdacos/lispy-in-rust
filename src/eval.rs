@@ -8,10 +8,21 @@ use functions;
 pub fn standard_env() -> HashMap<String, Value> {
     let mut env: HashMap<String, Value> = HashMap::new();
     env.insert(string_from_str("pi"), Value::number(PI));
+
     env.insert(string_from_str("+"), Value::function(functions::maths::add));
     env.insert(string_from_str("-"), Value::function(functions::maths::subtract));
     env.insert(string_from_str("*"), Value::function(functions::maths::multiply));
     env.insert(string_from_str("/"), Value::function(functions::maths::divide));
+    env.insert(string_from_str("max"), Value::function(functions::maths::max));
+    env.insert(string_from_str("min"), Value::function(functions::maths::min));
+
+    env.insert(string_from_str("="), Value::function(functions::operators::eq));
+    env.insert(string_from_str("<"), Value::function(functions::operators::lt));
+    env.insert(string_from_str("<="), Value::function(functions::operators::lte));
+    env.insert(string_from_str(">"), Value::function(functions::operators::gt));
+    env.insert(string_from_str(">="), Value::function(functions::operators::gte));
+    env.insert(string_from_str("not"), Value::function(functions::operators::not));
+
     env
 }
 

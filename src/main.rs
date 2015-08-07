@@ -15,6 +15,8 @@ use eval::{eval, standard_env};
 
 // A prompt-read-eval-print loop.
 fn repl(prompt: &str, env: &mut HashMap<String, Value>) {
+    println!("\n *** Lisp.py in Rust ***\n\nEnter your s-expression. Only supports arithmetic operations, for example: (+ 2 (* 3 pi)).\nEnter q or quit to exit.");
+
     loop {
         print!("{}", prompt);
         io::stdout().flush().ok();
