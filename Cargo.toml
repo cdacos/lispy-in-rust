@@ -1,4 +1,4 @@
 [package]
-name = "cdacos-rust-lispy"
+name = "lispy-in-rust"
 version = "0.1.0"
 authors = ["Carlos da Costa <cdacos@gmail.com>"]
