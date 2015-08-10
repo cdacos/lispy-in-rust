@@ -1,91 +1,65 @@
 use value::Value;
 
-pub fn add(args: Vec<Value>) -> Value {
-    let mut result = 0f32;
+enum Operation {
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Minimum,
+    Maximum,
+}
+
+fn operate(args: Vec<Value>, op: Operation) -> Value {
+    let mut result;
 
     match args.len() {
-        0 => panic!("Add needs at least one number"),
-        _ => for arg in args {
-                result += arg.number.unwrap();
+        0 => panic!("Math operations require at least one number"),
+        _ => {
+            match args[0] {
+                Value::Number(n) => result = n,
+                _ => panic!("Math operations require numbers"),
+            }
+            for i in 1..args.len() {
+                match args[i] {
+                    Value::Number(n) =>
+                        match op {
+                            Operation::Add => result += n,
+                            Operation::Subtract => result -= n,
+                            Operation::Multiply => result *= n,
+                            Operation::Divide => result /= n,
+                            Operation::Minimum => if n < result { result = n },
+                            Operation::Maximum => if n > result { result = n },
+                        },
+                    _ => panic!("Match operations require numbers"),
+                }
+            }
         }
     }
     
-    Value::number(result)
+    Value::Number(result)
+}
+
+pub fn add(args: Vec<Value>) -> Value {
+    operate(args, Operation::Add)
 }
 
 pub fn subtract(args: Vec<Value>) -> Value {
-    let mut result = 0f32;
-
-    match args.len() {
-        0 => panic!("Subtract needs at least one number"),
-        _ => for arg in args {
-                result -= arg.number.unwrap();
-        }
-    }
-    
-    Value::number(result)
+    operate(args, Operation::Subtract)
 }
 
 pub fn multiply(args: Vec<Value>) -> Value {
-    let mut result = 1f32;
-
-    match args.len() {
-        0 => panic!("Multiply needs at least one number"),
-        _ => for arg in args {
-                result *= arg.number.unwrap();
-        }
-    }
-    
-    Value::number(result)
+    operate(args, Operation::Multiply)
 }
 
 pub fn divide(args: Vec<Value>) -> Value {
-    let mut result;
-
-    match args.len() {
-        0 => panic!("Divide needs at least one number"),
-        _ => {
-            result = args[0].number.unwrap();
-            for i in 1..args.len() {
-                result /= args[i].number.unwrap();
-            }
-        }
-    }
-    
-    Value::number(result)
+    operate(args, Operation::Divide)
 }
 
 pub fn min(args: Vec<Value>) -> Value {
-    let mut result;
-
-    match args.len() {
-        0 => panic!("Min needs at least one number"),
-        _ => {
-            result = args[0].number.unwrap();
-            for i in 1..args.len() {
-                let a = args[i].number.unwrap();
-                result = if a < result { a } else { result };
-            }
-        }
-    }
-    
-    Value::number(result)
+    operate(args, Operation::Minimum)
 }
 
 pub fn max(args: Vec<Value>) -> Value {
-    let mut result;
-
-    match args.len() {
-        0 => panic!("Min needs at least one number"),
-        _ => {
-            result = args[0].number.unwrap();
-            for i in 1..args.len() {
-                let a = args[i].number.unwrap();
-                result = if a > result { a } else { result };
-            }
-        }
-    }
-    
-    Value::number(result)
+    operate(args, Operation::Maximum)
 }
 

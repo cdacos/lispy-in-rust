@@ -2,7 +2,7 @@
 pub struct AstNode {
     pub list: Vec<AstNode>,
     pub symbol: Option<String>,
-    pub number: Option<f32>,
+    pub number: Option<f64>,
 }
 
 impl AstNode {
@@ -59,7 +59,7 @@ fn read_from_tokens(tokens: &mut Vec<String>) -> AstNode {
 // Numbers become numbers; every other token is a symbol.
 fn atom(token: String) -> AstNode {
     let mut atom = AstNode::new();
-    match token.parse::<f32>() {
+    match token.parse::<f64>() {
         Ok(v) => atom.number = Some(v),
         _ => atom.symbol = Some(token),
     }

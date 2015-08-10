@@ -1,39 +1,25 @@
 use std::fmt;
 
-pub struct Value {
-    pub function: Option<fn(x: Vec<Value>) -> Value>,
-    pub number: Option<f32>,
+pub enum Value {
+    Function(fn(Vec<Value>) -> Value),
+    Number(f64),
     //TODO string: Option<String>,
 }
 
 impl fmt::Debug for Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if self.number != None {
-            write!(f, "Value: {}", self.number.unwrap())
-        }
-        else {
-            write!(f, "Value: Function")
+        match *self {
+            Value::Function(_) => write!(f, "Value: is a function{}", ""),
+            Value::Number(n) => write!(f, "Value: {}", n),
         }
     }
 }
 
 impl Value {
-    pub fn new(f: Option<fn(x: Vec<Value>) -> Value>, n: Option<f32>) -> Value {
-        Value {
-            function: f,
-            number: n,
-        }
-    }
-    
-    pub fn function(f: fn(x: Vec<Value>) -> Value) -> Value {
-        Value::new(Some(f), None)
-    }
-    
-    pub fn number(n: f32) -> Value {
-        Value::new(None, Some(n))
-    }
-
     pub fn clone(&self) -> Value {
-        Value::new(self.function, self.number)
+        match *self {
+            Value::Function(f) => Value::Function(f),
+            Value::Number(n) => Value::Number(n),
+        }
     }
 }

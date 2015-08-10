@@ -18,7 +18,7 @@ fn repl(prompt: &str, env: &mut HashMap<String, Value>) {
 
     loop {
         print!("{}", prompt);
-        io::stdout().flush().ok();
+        io::stdout().flush().ok(); // Unexpectedly, it doesn't flush by itself
 
         let mut expression = String::new();
 
@@ -26,16 +26,10 @@ fn repl(prompt: &str, env: &mut HashMap<String, Value>) {
             .ok()
             .expect("failed to read line");
 
-        let ast = parse(&*expression);
-        let t = eval(ast, env);
-
-        if t.number != None {
-            println!("{:#?}", t.number.unwrap());
+        match eval(parse(&*expression), env) {
+            Value::Number(n) => println!("{}", f64::to_string(&n)),
+            _ => println!("Expression did not return a number"),
         }
-//        else {
-//            println!("\n>>> No result returned");
-//            println!("\n>>> The environment is: {:#?}", env);
-//        }
     }
 }
 

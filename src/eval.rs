@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::f32::consts::PI;
+use std::f64::consts::PI;
 use parse::AstNode;
 use value::Value;
 use functions;
@@ -7,21 +7,21 @@ use functions;
 // An environment with some Scheme standard procedures.
 pub fn standard_env() -> HashMap<String, Value> {
     let mut env: HashMap<String, Value> = HashMap::new();
-    env.insert(string_from_str("pi"), Value::number(PI));
+    env.insert(string_from_str("pi"), Value::Number(PI));
 
-    env.insert(string_from_str("+"), Value::function(functions::maths::add));
-    env.insert(string_from_str("-"), Value::function(functions::maths::subtract));
-    env.insert(string_from_str("*"), Value::function(functions::maths::multiply));
-    env.insert(string_from_str("/"), Value::function(functions::maths::divide));
-    env.insert(string_from_str("max"), Value::function(functions::maths::max));
-    env.insert(string_from_str("min"), Value::function(functions::maths::min));
+    env.insert(string_from_str("+"), Value::Function(functions::maths::add));
+    env.insert(string_from_str("-"), Value::Function(functions::maths::subtract));
+    env.insert(string_from_str("*"), Value::Function(functions::maths::multiply));
+    env.insert(string_from_str("/"), Value::Function(functions::maths::divide));
+    env.insert(string_from_str("max"), Value::Function(functions::maths::max));
+    env.insert(string_from_str("min"), Value::Function(functions::maths::min));
 
-    env.insert(string_from_str("="), Value::function(functions::operators::eq));
-    env.insert(string_from_str("<"), Value::function(functions::operators::lt));
-    env.insert(string_from_str("<="), Value::function(functions::operators::lte));
-    env.insert(string_from_str(">"), Value::function(functions::operators::gt));
-    env.insert(string_from_str(">="), Value::function(functions::operators::gte));
-    env.insert(string_from_str("not"), Value::function(functions::operators::not));
+    env.insert(string_from_str("="), Value::Function(functions::operators::eq));
+    env.insert(string_from_str("<"), Value::Function(functions::operators::lt));
+    env.insert(string_from_str("<="), Value::Function(functions::operators::lte));
+    env.insert(string_from_str(">"), Value::Function(functions::operators::gt));
+    env.insert(string_from_str(">="), Value::Function(functions::operators::gte));
+    env.insert(string_from_str("not"), Value::Function(functions::operators::not));
 
     env
 }
@@ -39,7 +39,7 @@ pub fn eval(atom: AstNode, env: &mut HashMap<String, Value>) -> Value {
         env.get(s).unwrap().clone()
     }
     else if atom.number != None { // constant literal
-        Value::number(atom.number.unwrap())
+        Value::Number(atom.number.unwrap())
     }
     else if atom.list.len() > 0 {  // non-empty list
         let mut list = atom.list;
@@ -65,16 +65,19 @@ pub fn eval(atom: AstNode, env: &mut HashMap<String, Value>) -> Value {
                     let test = list.remove(0);
                     let conseq = list.remove(0);
                     let alt = list.remove(0);
-                    let test_result = eval(test, env).number.unwrap();
+                    let test_result = match eval(test, env) {
+                        Value::Number(n) => n,
+                        _ => panic!("Eval value is expected to be a number."),
+                    };
                     
-                    return eval(if test_result != 0f32 { conseq } else { alt }, env);
+                    return eval(if test_result != 0f64 { conseq } else { alt }, env);
                 },
                 "define" => { // (define var exp)
                     match list.remove(0).symbol {
                         Some(v) => {
                             let exp = eval(list.remove(0), env);
                             env.insert(v.clone(), exp);
-                            return Value::new(None, None);
+                            return Value::Number(1f64);
                         },
                         None => panic!("Define must be in the form: (define var exp)"),
                     }
@@ -84,7 +87,10 @@ pub fn eval(atom: AstNode, env: &mut HashMap<String, Value>) -> Value {
         }
 
         //  (proc arg...)
-        let op = eval(first, env).function.unwrap();
+        let op = match eval(first, env) {
+            Value::Function(f) => f,
+            _ => panic!("Procedure expected"),
+        };
         let mut args: Vec<Value> = vec![];
         for arg in list {
             args.push(eval(arg, env));
