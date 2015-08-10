@@ -34,34 +34,34 @@ fn string_from_str(string: &str) -> String {
 
 // Evaluate an expression in an environment.
 pub fn eval(atom: AstNode, env: &mut HashMap<String, Value>) -> Value {
-    if atom.symbol != None { // variable reference
-        let s: &str = &*atom.symbol.unwrap();
-        env.get(s).unwrap().clone()
-    }
-    else if atom.number != None { // constant literal
-        Value::Number(atom.number.unwrap())
-    }
-    else if atom.list.len() > 0 {  // non-empty list
-        let mut list = atom.list;
-        let first: AstNode = list.remove(0);
-        let first_symbol = first.clone().symbol;
-        
-        if first_symbol != None {
-            match &*first_symbol.unwrap() {
-                "quote" =>  { // (quote exp)
+    match atom {
+        AstNode::Symbol(symbol) => { // variable reference
+            let s: &str = &*symbol;
+            env.get(s).unwrap().clone()
+        },
+        AstNode::Number(n) => { // constant literal
+            Value::Number(n)
+        },
+        AstNode::List(l) => { // non-empty list
+            let mut list = l;
+            let first: AstNode = list.remove(0);
+            let s = match first {
+                AstNode::Symbol(ref s) => s.clone(),
+                _ => String::new(),
+            };
+
+            match &*s {
+                "quote" => { // (quote exp)
                     if list.len() != 1 {
                         panic!("Quote must be in the form of: (quote exp)");
                     }
-                    
                     let exp = list.remove(0);
-
                     return eval(exp, env);
                 },
                 "if" => { // (if test conseq alt)
                     if list.len() != 3 {
                         panic!("If must be in the form of: (if test conseq alt)");
                     }
-                    
                     let test = list.remove(0);
                     let conseq = list.remove(0);
                     let alt = list.remove(0);
@@ -69,35 +69,30 @@ pub fn eval(atom: AstNode, env: &mut HashMap<String, Value>) -> Value {
                         Value::Number(n) => n,
                         _ => panic!("Eval value is expected to be a number."),
                     };
-                    
                     return eval(if test_result != 0f64 { conseq } else { alt }, env);
                 },
                 "define" => { // (define var exp)
-                    match list.remove(0).symbol {
-                        Some(v) => {
+                    match list.remove(0) {
+                        AstNode::Symbol(v) => {
                             let exp = eval(list.remove(0), env);
                             env.insert(v.clone(), exp);
                             return Value::Number(1f64);
                         },
-                        None => panic!("Define must be in the form: (define var exp)"),
+                        _ => panic!("Define must be in the form: (define var exp)"),
                     }
                 },
-                _ => {}
+                _ => { //  (proc arg...)
+                    let op = match eval(first, env) {
+                        Value::Function(f) => f,
+                        _ => panic!("Procedure expected"),
+                    };
+                    let mut args: Vec<Value> = vec![];
+                    for arg in list {
+                        args.push(eval(arg, env));
+                    }
+                    op(args)
+                },
             }
-        }
-
-        //  (proc arg...)
-        let op = match eval(first, env) {
-            Value::Function(f) => f,
-            _ => panic!("Procedure expected"),
-        };
-        let mut args: Vec<Value> = vec![];
-        for arg in list {
-            args.push(eval(arg, env));
-        }
-        op(args)
-    }
-    else { // empty list
-        panic!("TODO: Handle empty lists");
+        },
     }
 }

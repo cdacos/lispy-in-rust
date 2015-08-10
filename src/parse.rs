@@ -1,28 +1,8 @@
 #[derive(Debug)]
-pub struct AstNode {
-    pub list: Vec<AstNode>,
-    pub symbol: Option<String>,
-    pub number: Option<f64>,
-}
-
-impl AstNode {
-    pub fn new() -> AstNode {
-        AstNode {
-            list: vec![],
-            symbol: None,
-            number: None,
-        }
-    } 
-
-    pub fn clone(&self) -> AstNode {
-        let mut node = AstNode::new();
-        node.number = self.number;
-        match self.symbol {
-            Some(ref s)  => node.symbol = Some(s.clone()),
-            None => node.symbol = None,
-        }
-        node
-    }
+pub enum AstNode {
+    List(Vec<AstNode>),
+    Symbol(String),
+    Number(f64),
 }
 
 //Convert a string of characters into a list of tokens.
@@ -44,12 +24,12 @@ fn read_from_tokens(tokens: &mut Vec<String>) -> AstNode {
     let token = tokens.remove(0);
     match &*token {
         "(" => {
-            let mut atom = AstNode::new();
+            let mut list = vec![];
             while tokens[0] != ")" {
-                atom.list.push(read_from_tokens(tokens));
+                list.push(read_from_tokens(tokens));
             }
             tokens.remove(0); // pop off ')'
-            atom
+            AstNode::List(list)
         },
         ")" => panic!("unexpected token"),
         _ => atom(token)
@@ -58,10 +38,8 @@ fn read_from_tokens(tokens: &mut Vec<String>) -> AstNode {
 
 // Numbers become numbers; every other token is a symbol.
 fn atom(token: String) -> AstNode {
-    let mut atom = AstNode::new();
     match token.parse::<f64>() {
-        Ok(v) => atom.number = Some(v),
-        _ => atom.symbol = Some(token),
+        Ok(v) => AstNode::Number(v),
+        _ => AstNode::Symbol(token),
     }
-    atom
 }
