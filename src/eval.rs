@@ -7,29 +7,23 @@ use functions;
 // An environment with some Scheme standard procedures.
 pub fn standard_env() -> HashMap<String, Value> {
     let mut env: HashMap<String, Value> = HashMap::new();
-    env.insert(string_from_str("pi"), Value::Number(PI));
+    env.insert("pi".to_string(), Value::Number(PI));
 
-    env.insert(string_from_str("+"), Value::Function(functions::maths::add));
-    env.insert(string_from_str("-"), Value::Function(functions::maths::subtract));
-    env.insert(string_from_str("*"), Value::Function(functions::maths::multiply));
-    env.insert(string_from_str("/"), Value::Function(functions::maths::divide));
-    env.insert(string_from_str("max"), Value::Function(functions::maths::max));
-    env.insert(string_from_str("min"), Value::Function(functions::maths::min));
+    env.insert("+".to_string(), Value::Function(functions::maths::add));
+    env.insert("-".to_string(), Value::Function(functions::maths::subtract));
+    env.insert("*".to_string(), Value::Function(functions::maths::multiply));
+    env.insert("/".to_string(), Value::Function(functions::maths::divide));
+    env.insert("max".to_string(), Value::Function(functions::maths::max));
+    env.insert("min".to_string(), Value::Function(functions::maths::min));
 
-    env.insert(string_from_str("="), Value::Function(functions::operators::eq));
-    env.insert(string_from_str("<"), Value::Function(functions::operators::lt));
-    env.insert(string_from_str("<="), Value::Function(functions::operators::lte));
-    env.insert(string_from_str(">"), Value::Function(functions::operators::gt));
-    env.insert(string_from_str(">="), Value::Function(functions::operators::gte));
-    env.insert(string_from_str("not"), Value::Function(functions::operators::not));
+    env.insert("=".to_string(), Value::Function(functions::operators::eq));
+    env.insert("<".to_string(), Value::Function(functions::operators::lt));
+    env.insert("<=".to_string(), Value::Function(functions::operators::lte));
+    env.insert(">".to_string(), Value::Function(functions::operators::gt));
+    env.insert(">=".to_string(), Value::Function(functions::operators::gte));
+    env.insert("not".to_string(), Value::Function(functions::operators::not));
 
     env
-}
-
-fn string_from_str(string: &str) -> String {
-    let mut s = String::new();
-    s.push_str(string);
-    s
 }
 
 // Evaluate an expression in an environment.
@@ -37,12 +31,18 @@ pub fn eval(atom: AstNode, env: &mut HashMap<String, Value>) -> Value {
     match atom {
         AstNode::Symbol(symbol) => { // variable reference
             let s: &str = &*symbol;
-            env.get(s).unwrap().clone()
+            match env.get(&*s) {
+                Some(v) => v.clone(),
+                _ => {
+                    println!("Variable: {}", s);
+                    panic!("Unknown variable reference")
+                },
+            }
         },
         AstNode::Number(n) => { // constant literal
             Value::Number(n)
         },
-        AstNode::List(l) => { // non-empty list
+        AstNode::List(l) => { // list
             let mut list = l;
             let first: AstNode = list.remove(0);
             let s = match first {
