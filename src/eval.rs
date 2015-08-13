@@ -1,43 +1,36 @@
-use std::collections::HashMap;
 use std::f64::consts::PI;
+use env::Env;
 use parse::AstNode;
 use value::Value;
 use functions;
 
 // An environment with some Scheme standard procedures.
-pub fn standard_env() -> HashMap<String, Value> {
-    let mut env: HashMap<String, Value> = HashMap::new();
-    env.insert("pi".to_string(), Value::Number(PI));
+pub fn standard_env() -> Env {
+    let mut env: Env = Env::new(None);
+    env.set("pi", Value::Number(PI));
 
-    env.insert("+".to_string(), Value::Function(functions::maths::add));
-    env.insert("-".to_string(), Value::Function(functions::maths::subtract));
-    env.insert("*".to_string(), Value::Function(functions::maths::multiply));
-    env.insert("/".to_string(), Value::Function(functions::maths::divide));
-    env.insert("max".to_string(), Value::Function(functions::maths::max));
-    env.insert("min".to_string(), Value::Function(functions::maths::min));
+    env.set("+", Value::Function(functions::maths::add));
+    env.set("-", Value::Function(functions::maths::subtract));
+    env.set("*", Value::Function(functions::maths::multiply));
+    env.set("/", Value::Function(functions::maths::divide));
+    env.set("max", Value::Function(functions::maths::max));
+    env.set("min", Value::Function(functions::maths::min));
 
-    env.insert("=".to_string(), Value::Function(functions::operators::eq));
-    env.insert("<".to_string(), Value::Function(functions::operators::lt));
-    env.insert("<=".to_string(), Value::Function(functions::operators::lte));
-    env.insert(">".to_string(), Value::Function(functions::operators::gt));
-    env.insert(">=".to_string(), Value::Function(functions::operators::gte));
-    env.insert("not".to_string(), Value::Function(functions::operators::not));
+    env.set("=", Value::Function(functions::operators::eq));
+    env.set("<", Value::Function(functions::operators::lt));
+    env.set("<=", Value::Function(functions::operators::lte));
+    env.set(">", Value::Function(functions::operators::gt));
+    env.set(">=", Value::Function(functions::operators::gte));
+    env.set("not", Value::Function(functions::operators::not));
 
     env
 }
 
 // Evaluate an expression in an environment.
-pub fn eval(atom: AstNode, env: &mut HashMap<String, Value>) -> Value {
+pub fn eval(atom: AstNode, env: &mut Env) -> Value {
     match atom {
         AstNode::Symbol(symbol) => { // variable reference
-            let s: &str = &*symbol;
-            match env.get(&*s) {
-                Some(v) => v.clone(),
-                _ => {
-                    println!("Variable: {}", s);
-                    panic!("Unknown variable reference")
-                },
-            }
+            env.find(&*symbol).clone()
         },
         AstNode::Number(n) => { // constant literal
             Value::Number(n)
@@ -75,12 +68,22 @@ pub fn eval(atom: AstNode, env: &mut HashMap<String, Value>) -> Value {
                     match list.remove(0) {
                         AstNode::Symbol(v) => {
                             let exp = eval(list.remove(0), env);
-                            env.insert(v.clone(), exp);
+                            env.set(v, exp);
                             return Value::Number(1f64);
                         },
                         _ => panic!("Define must be in the form: (define var exp)"),
                     }
                 },
+                "set!" => { // (set! var exp)
+                    match list.remove(0) {
+                        AstNode::Symbol(v) => {
+                            let exp = eval(list.remove(0), env);
+                            env.find_and_set(v, exp);
+                            return Value::Number(1f64);
+                        },
+                        _ => panic!("Define must be in the form: (set! var exp)"),
+                    }
+                }
                 _ => { //  (proc arg...)
                     let op = match eval(first, env) {
                         Value::Function(f) => f,

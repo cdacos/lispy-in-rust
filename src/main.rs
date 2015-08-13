@@ -1,19 +1,20 @@
 // See http://norvig.com/lispy.html
 
 mod value;
+mod env;
 mod functions;
 mod parse;
 mod eval;
 
 use std::io;
 use std::io::Write;
-use std::collections::HashMap;
+use env::Env;
 use value::Value;
 use parse::parse;
 use eval::{eval, standard_env};
 
 // A prompt-read-eval-print loop.
-fn repl(prompt: &str, env: &mut HashMap<String, Value>) {
+fn repl(prompt: &str, env: &mut Env) {
     println!("\n *** Lispy in Rust ***\n\nEnter your s-expression. Only supports arithmetic operations, for example: (+ 2 (* 3 pi)).\nEnter q or quit to exit.");
 
     loop {
